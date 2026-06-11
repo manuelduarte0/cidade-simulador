@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>City Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body { 
+      font-family: Arial; background: #2d5016; overflow: hidden; 
+      touch-action: none;
+    }
+    
+    #game {
+      position: relative; width: 100vw; height: 100vh; overflow: hidden;
+    }
+    
+    #mapa {
+      position: absolute; width: 2000px; height: 2000px;
+      background: #4a7c2c; background-image: 
+        linear-gradient(0deg, rgba(0,0,0,.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      transform-origin: 0 0; cursor: grab;
+    }
+    #mapa.dragging { cursor: grabbing; }
+    
+   .tile {
+      position: absolute; width: 50px; height: 50px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+   .tile.vazio:hover { background: rgba(255,255,255,0.2); }
+   .tile.estrada { background: #333; }
+   .tile.estrada::after {
+      content: ''; position: absolute; top: 50%; left: 0; right: 0;
+      height: 2px; background: #FFD700; transform: translateY(-50%);
+    }
+   .edificio {
+      position: absolute; font-size: 35px; 
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; z-index: 5;
+    }
+    
+   .carro {
+      position: absolute; font-size: 16px; z-index: 10;
+      transition: all 0.1s linear; pointer-events: none;
+    }
+   .pedestre {
+      position: absolute; font-size: 12px; z-index: 8;
+      transition: all 0.5s linear; pointer-events: none;
+    }
+
+    #hud {
+      position: fixed; top: 10px; left: 10px; right: 10px; z-index: 100;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      pointer-events: none;
+    }
+    #dinheiro {
+      background: rgba(0,0,0,0.8); color: #0F0; padding: 10px 15px;
+      border-radius: 10px; font-size: 20px; font-weight: bold;
+      border: 2px solid #0F0; pointer-events: all;
+    }
+    #populacao {
+      background: rgba(0,0,0,0.8); color: #FFF; padding: 10px 15px;
+      border-radius: 10px; font-size: 16px; pointer-events: all;
+    }
+    
+    #btn-comprar {
+      position: fixed; bottom: 20px; right: 20px; z-index: 100;
+      width: 70px; height: 70px; background: #4CAF50; 
+      border: 3px solid #FFF; border-radius: 50%; 
+      font-size: 35px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    
+    #loja {
+      position: fixed; bottom: -100%; left: 0; right: 0; z-index: 200;
+      background: #1a1a2e; height: 70vh; border-radius: 20px 20px 0 0;
+      transition: bottom 0.3s; overflow-y: auto; padding: 20px;
+    }
+    #loja.aberta { bottom: 0; }
+    #loja-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 15px; color: white;
+    }
+    #fechar-loja {
+      background: #f44336; color: white; border: none;
+      width: 35px; height: 35px; border-radius: 50%; font-size: 20px;
+    }
+    
+   .item-loja {
+      background: #0f0f1e; padding: 15px; margin: 10px 0;
+      border-radius: 10px; display: flex; align-items: center; gap: 15px;
+      border: 2px solid #333;
+    }
+   .item-loja:active { background: #2a2a4e; }
+   .item-emoji { font-size: 40px; }
+   .item-info { flex: 1; color: white; }
+   .item-nome { font-size: 18px; font-weight: bold; }
+   .item-preco { color: #0F0; font-size: 16px; }
+   .item-desc { color: #AAA; font-size: 12px; margin-top: 3px; }
+    
+    #menu-construir {
+      position: fixed; background: rgba(0,0,0,0.95); padding: 15px;
+      border-radius: 10px; z-index: 150; display: none;
+      border: 2px solid #4CAF50;
+    }
+    #menu-construir button {
+      display: block; width: 200px; padding: 12px; margin: 5px 0;
+      background: #4CAF50; color: white; border: none; border-radius: 5px;
+      font-size: 16px; font-weight: bold;
+    }
+    
+    #toast {
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      background: #f44336; color: white; padding: 10px 20px;
+      border-radius: 20px; z-index: 300; display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="mapa"></div>
+  </div>
+
+  <div id="hud">
+    <div id="dinheiro">$ 1.000</div>
+    <div id="populacao">👥 0</div>
+  </div>
+
+  <button id="btn-comprar">🏗️</button>
+  <div id="toast"></div>
+
+  <div id="loja">
+    <div id="loja-header">
+      <h2>Loja de Construção</h2>
+      <button id="fechar-loja">×</button>
+    </div>
+    <div id="lista-itens"></div>
+  </div>
+
+  <div id="menu-construir">
+    <button onclick="construirAqui('estrada')">🛣️ Construir Estrada</button>
+    <button onclick="abrirLojaNoTile()">🏢 Construir Edifício</button>
+    <button onclick="fecharMenu()">Cancelar</button>
+  </div>
+
+<script>
+  const ITENS = [
+    { id: 'estrada', nome: 'Estrada', emoji: '🛣️', preco: 10, desc: 'Conecta a cidade', tipo: 'infra' },
+    { id: 'casa', nome: 'Casa', emoji: '🏠', preco: 100, desc: '+4 população', tipo: 'res', pop: 4 },
+    { id: 'predio', nome: 'Prédio', emoji: '🏢', preco: 500, desc: '+20 população', tipo: 'res', pop: 20 },
+    { id: 'escola', nome: 'Escola', emoji: '🏫', preco: 800, desc: 'Educação', tipo: 'serv' },
+    { id: 'hospital', nome: 'Hospital', emoji: '🏥', preco: 1200, desc: 'Saúde', tipo: 'serv' },
+    { id: 'delegacia', nome: 'Delegacia', emoji: '🚓', preco: 900, desc: 'Segurança', tipo: 'serv' },
+    { id: 'hotel', nome: 'Hotel', emoji: '🏨', preco: 1500, desc: 'Turismo +$50/dia', tipo: 'com', renda: 50 },
+    { id: 'lanchonete', nome: 'Lanchonete', emoji: '🍔', preco: 300, desc: '+$20/dia', tipo: 'com', renda: 20 },
+    { id: 'restaurante', nome: 'Restaurante', emoji: '🍽️', preco: 600, desc: '+$40/dia', tipo: 'com', renda: 40 },
+    { id: 'fazenda', nome: 'Fazenda', emoji: '🚜', preco: 400, desc: '+$30/dia', tipo: 'com', renda: 30 },
+    { id: 'estadio', nome: 'Estádio', emoji: '🏟️', preco: 5000, desc: 'Lazer +$200/dia', tipo: 'lazer', renda: 200 }
+  ];
+
+  let dinheiro = 1000;
+  let populacao = 0;
+  let mapa = {}; // {x_y: {tipo, item}}
+  let tileSelecionado = null;
+  let carros = [];
+  let pedestres = [];
+
+  // MAPA - Pan e Zoom
+  const mapaEl = document.getElementById('mapa');
+  let scale = 1, x = -500, y = -500;
+  let isDragging = false, startX, startY;
+  
+  function updateTransform() {
+    mapaEl.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  }
+  updateTransform();
+
+  // Gerar tiles
+  for(let i = 0; i < 40; i++) {
+    for(let j = 0; j < 40; j++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile vazio';
+      tile.style.left = i * 50 + 'px';
+      tile.style.top = j * 50 + 'px';
+      tile.dataset.x = i;
+      tile.dataset.y = j;
+      tile.onclick = (e) => clicarTile(i, j, e);
+      mapaEl.appendChild(tile);
+    }
+  }
+
+  // Pan
+  mapaEl.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      isDragging = true;
+      startX = e.touches[0].clientX - x;
+      startY = e.touches[0].clientY - y;
+      mapaEl.classList.add('dragging');
+    }
+  });
+  mapaEl.addEventListener('touchmove', (e) => {
+    if (isDragging && e.touches.length === 1) {
+      x = e.touches[0].clientX - startX;
+      y = e.touches[0].clientY - startY;
+      updateTransform();
+    }
+  });
+  mapaEl.addEventListener('touchend', () => {
+    isDragging = false;
+    mapaEl.classList.remove('dragging');
+  });
+
+  // Zoom com 2 dedos
+  let lastDist = 0;
+  mapaEl.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (lastDist > 0) {
+        scale *= dist / lastDist;
+        scale = Math.max(0.5, Math.min(2, scale));
+        updateTransform();
+      }
+      lastDist = dist;
+    }
+  });
+  mapaEl.addEventListener('touchend', () => lastDist = 0);
+
+  // CLICAR NO TERRENO
+  function clicarTile(tx, ty, e) {
+    if (isDragging) return;
+    e.stopPropagation();
+    tileSelecionado = {x: tx, y: ty};
+    
+    const key = `${tx}_${ty}`;
+    if (mapa[key]) {
+      mostrarToast('Já tem construção aqui!');
+      return;
+    }
+    
+    const menu = document.getElementById('menu-construir');
+    menu.style.display = 'block';
+    menu.style.left = e.clientX + 'px';
+    menu.style.top = e.clientY + 'px';
+  }
+
+  function fecharMenu() {
+    document.getElementById('menu-construir').style.display = 'none';
+  }
+
+  function construirAqui(tipo) {
+    fecharMenu();
+    if (tipo === 'estrada') construir('estrada', tileSelecionado.x, tileSelecionado.y);
+  }
+
+  function abrirLojaNoTile() {
+    fecharMenu();
+    abrirLoja();
+  }
+
+  // LOJA
+  const lojaEl = document.getElementById('loja');
+  document.getElementById('btn-comprar').onclick = abrirLoja;
+  document.getElementById('fechar-loja').onclick = () => lojaEl.classList.remove('aberta');
+
+  function abrirLoja() {
+    lojaEl.classList.add('aberta');
+    renderizarLoja();
+  }
+
+  function renderizarLoja() {
+    const lista = document.getElementById('lista-itens');
+    lista.innerHTML = '';
+    ITENS.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'item-loja';
+      div.innerHTML = `
+        <div class="item-emoji">${item.emoji}</div>
+        <div class="item-info">
+          <div class="item-nome">${item.nome}</div>
+          <div class="item-preco">$ ${item.preco}</div>
+          <div class="item-desc">${item.desc}</div>
+        </div>
+      `;
+      div.onclick = () => {
+        if (tileSelecionado) {
+          construir(item.id, tileSelecionado.x, tileSelecionado.y);
+          lojaEl.classList.remove('aberta');
+        } else {
+          mostrarToast('Clica no terreno primeiro!');
+        }
+      };
+      lista.appendChild(div);
+    });
+  }
+
+  // CONSTRUIR
+  function construir(itemId, tx, ty) {
+    const item = ITENS.find(i => i.id === itemId);
+    const key = `${tx}_${ty}`;
+    
+    if (mapa[key]) return mostrarToast('Terreno ocupado!');
+    if (dinheiro < item.preco) return mostrarToast('Dinheiro insuficiente!');
+    
+    dinheiro -= item.preco;
+    mapa[key] = { tipo: item.tipo, item: itemId };
+    
+    if (item.pop) populacao += item.pop;
+    
+    // Visual
+    const tile = document.querySelector(`[data-x="${tx}"][data-y="${ty}"]`);
+    if (itemId === 'estrada') {
+      tile.className = 'tile estrada';
+    } else {
+      const edificio = document.createElement('div');
+      edificio.className = 'edificio';
+      edificio.style.left = tx * 50 + 'px';
+      edificio.style.top = ty * 50 + 'px';
+      edificio.innerHTML = item.emoji;
+      mapaEl.appendChild(edificio);
+      tile.className = 'tile ocupado';
+    }
+    
+    atualizarHUD();
+    spawnCarroSeTemEstrada();
+    spawnPedestre();
+  }
+
+  // CARROS ANDANDO
+  function spawnCarroSeTemEstrada() {
+    if (carros.length > 10) return;
+    const estradas = Object.keys(mapa).filter(k => mapa[k].tipo === 'infra');
+    if (estradas.length < 3) return;
+    
+    const [x, y] = estradas[Math.floor(Math.random() * estradas.length)].split('_').map(Number);
+    const carro = document.createElement('div');
+    carro.className = 'carro';
+    carro.innerHTML = ['🚗','🚕','🚙'][Math.floor(Math.random()*3)];
+    carro.style.left = x * 50 + 15 + 'px';
+    carro.style.top = y * 50 + 15 + 'px';
+    mapaEl.appendChild(carro);
+    carros.push({el: carro, x, y, dir: Math.floor(Math.random()*4)});
+  }
+
+  // PEDESTRES
+  function spawnPedestre() {
+    if (pedestres.length > 15 || populacao < 4) return;
+    const x = Math.floor(Math.random() * 40);
+    const y = Math.floor(Math.random() * 40);
+    const pedestre = document.createElement('div');
+    pedestre.className = 'pedestre';
+    pedestre.innerHTML = '🚶';
+    pedestre.style.left = x * 50 + 20 + 'px';
+    pedestre.style.top = y * 50 + 20 + 'px';
+    mapaEl.appendChild(pedestre);
+    pedestres.push({el: pedestre, x, y});
+  }
+
+  // ANIMAÇÃO CARROS
+  setInterval(() => {
+    carros.forEach(c => {
+      const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
+      c.x += dirs[c.dir][0] * 0.5;
+      c.y += dirs[c.dir][1] * 0.5;
+      c.el.style.left = c.x * 50 + 15 + 'px';
+      c.el.style.top = c.y * 50 + 15 + 'px';
+      
+      if (Math.random() < 0.02) c.dir = Math.floor(Math.random()*4);
+      if (c.x < 0 || c.x > 39 || c.y < 0 || c.y > 39) {
+        c.el.remove();
+        carros = carros.filter(car => car!== c);
+      }
+    });
+    
+    pedestres.forEach(p => {
+      p.x += (Math.random() - 0.5) * 0.3;
+      p.y += (Math.random() - 0.5) * 0.3;
+      p.el.style.left = p.x * 50 + 20 + 'px';
+      p.el.style.top = p.y * 50 + 20 + 'px';
+    });
+  }, 100);
+
+  // RENDA PASSIVA
+  setInterval(() => {
+    let renda = 0;
+    Object.values(mapa).forEach(m => {
+      const item = ITENS.find(i => i.id === m.item);
+      if (item && item.renda) renda += item.renda;
+    });
+    if (renda > 0) {
+      dinheiro += renda;
+      atualizarHUD();
+    }
+  }, 5000);
+
+  function atualizarHUD() {
+    document.getElementById('dinheiro').innerText = `$ ${dinheiro.toLocaleString()}`;
+    document.getElementById('populacao').innerText = `👥 ${populacao}`;
+  }
+
+  function mostrarToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 2000);
+  }
+
+  // Fechar menu ao clicar fora
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#menu-construir') &&!e.target.closest('.tile')) {
+      fecharMenu();
+    }
+  });
+
+  atualizarHUD();
+</script>
+</body>
+</html>
