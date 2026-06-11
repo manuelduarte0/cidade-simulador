@@ -17,76 +17,78 @@
     }
     
     /* TILE ISOMÉTRICO */
-   .tile {
+  .tile {
       position: absolute; width: 128px; height: 64px;
       background: #3d7d3d;
       clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
     }
-   .tile.vazio:active { filter: brightness(1.4); }
+  .tile.vazio:active { filter: brightness(1.4); }
     
-    /* ESTRADA ISOMÉTRICA */
-   .estrada {
+    /* ESTRADA */
+  .estrada {
       position: absolute; width: 128px; height: 64px;
       clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-      background: #333;
+      background: #2a2a2a;
     }
-   .estrada.h::after {
+  .estrada.h::after {
       content: ''; position: absolute; top: 50%; left: 0; right: 0;
-      height: 4px; background: repeating-linear-gradient(90deg, #FFD700 0px, #FFD700 20px, transparent 20px, transparent 35px);
+      height: 5px; background: repeating-linear-gradient(90deg, #FFD700 0px, #FFD700 25px, transparent 25px, transparent 40px);
       transform: translateY(-50%) skewY(-26.565deg);
     }
-   .estrada.v::after {
+  .estrada.v::after {
       content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
-      width: 4px; background: repeating-linear-gradient(0deg, #FFD700 0px, #FFD700 20px, transparent 20px, transparent 35px);
+      width: 5px; background: repeating-linear-gradient(0deg, #FFD700 0px, #FFD700 25px, transparent 25px, transparent 40px);
       transform: translateX(-50%) skewX(26.565deg);
     }
-   .faixa {
+    
+  .faixa {
       position: absolute; width: 128px; height: 64px;
       clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-      background: #666;
+      background: #555;
     }
-   .faixa::after {
+  .faixa::after {
       content: ''; position: absolute; top: 50%; left: 50%;
-      width: 60%; height: 8px; background: #FFF;
+      width: 70%; height: 10px; background: repeating-linear-gradient(90deg, #FFF 0px, #FFF 8px, transparent 8px, transparent 16px);
       transform: translate(-50%, -50%) skewX(-26.565deg);
     }
     
-    /* PRÉDIO COM IMAGEM */
-   .building {
+    /* PRAÇA PÚBLICA */
+  .praca {
+      position: absolute; width: 128px; height: 64px;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      background: #c9b037;
+    }
+  .praca::before {
+      content: '🌳⛲🌳'; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); font-size: 20px;
+    }
+    
+    /* PRÉDIO CANVAS */
+  .building {
       position: absolute; pointer-events: none;
       transform: translate(-50%, -100%);
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
     }
     
-    /* Canvas pra desenhar os prédios */
-   .building-canvas {
+  .building-canvas {
       position: absolute; bottom: 0; left: 50%;
       transform: translateX(-50%);
+      image-rendering: pixelated;
     }
     
-   .arvore {
-      position: absolute; width: 20px; height: 20px;
-      background: radial-gradient(circle, #2d8d2d 30%, #1d6d1d 100%);
-      border-radius: 50%; transform: translate(-50%, -50%);
-      box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
-      z-index: 50;
-    }
-    
-   .carro {
-      position: absolute; width: 24px; height: 14px; z-index: 100;
+  .carro {
+      position: absolute; width: 28px; height: 16px; z-index: 100;
       transform: translate(-50%, -50%);
-      transition: all 0.1s linear; pointer-events: none;
-      border-radius: 4px; border: 1px solid #000;
+      transition: all 0.12s linear; pointer-events: none;
+      border-radius: 5px; border: 2px solid #000;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+    }
+    
+  .pedestre {
+      position: absolute; width: 7px; height: 7px; z-index: 90;
+      transform: translate(-50%, -50%);
+      background: #222; border-radius: 50%;
+      transition: all 0.6s linear; pointer-events: none;
       box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
-    }
-    
-   .pedestre {
-      position: absolute; width: 6px; height: 6px; z-index: 90;
-      transform: translate(-50%, -50%);
-      background: #333; border-radius: 50%;
-      transition: all 0.7s linear; pointer-events: none;
-      box-shadow: 1px 1px 0 rgba(0,0,0,0.4);
     }
 
     #hud {
@@ -111,7 +113,7 @@
     
     #loja {
       position: fixed; bottom: -100%; left: 0; right: 0; z-index: 300;
-      background: #1a1a2e; height: 80vh; border-radius: 30px 30px 0 0;
+      background: #1a1a2e; height: 85vh; border-radius: 30px 30px 0 0;
       transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
       overflow-y: auto; padding: 30px;
     }
@@ -119,16 +121,18 @@
     #loja-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; color: white; }
     #fechar-loja { background: #f44336; color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 30px; }
     
-   .item-loja {
-      background: #0f0f1e; padding: 22px; margin: 16px 0; border-radius: 16px; 
-      display: flex; align-items: center; gap: 22px; border: 3px solid #333;
+  .categoria { color: #FF9800; font-size: 20px; font-weight: bold; margin: 25px 0 10px 0; }
+    
+  .item-loja {
+      background: #0f0f1e; padding: 20px; margin: 14px 0; border-radius: 16px; 
+      display: flex; align-items: center; gap: 20px; border: 3px solid #333;
     }
-   .item-loja:active { background: #2a2a4e; transform: scale(0.97); }
-   .item-emoji { font-size: 56px; }
-   .item-info { flex: 1; color: white; }
-   .item-nome { font-size: 24px; font-weight: bold; }
-   .item-preco { color: #0F0; font-size: 22px; margin-top: 5px; }
-   .item-desc { color: #AAA; font-size: 15px; margin-top: 7px; }
+  .item-loja:active { background: #2a2a4e; transform: scale(0.97); }
+  .item-emoji { font-size: 50px; }
+  .item-info { flex: 1; color: white; }
+  .item-nome { font-size: 22px; font-weight: bold; }
+  .item-preco { color: #0F0; font-size: 20px; margin-top: 5px; }
+  .item-desc { color: #AAA; font-size: 14px; margin-top: 7px; }
     
     #menu-construir {
       position: fixed; background: rgba(0,0,0,0.95); padding: 22px;
@@ -138,7 +142,7 @@
     #menu-construir button {
       display: block; width: 260px; padding: 18px; margin: 12px 0;
       background: #4CAF50; color: white; border: none; border-radius: 12px;
-      font-size: 19px; font-weight: bold;
+      font-size: 18px; font-weight: bold;
     }
     
     #toast {
@@ -155,7 +159,7 @@
   </div>
 
   <div id="hud">
-    <div id="dinheiro">$ 1.000</div>
+    <div id="dinheiro">$ 1.000.000</div>
     <div id="populacao">👥 0</div>
   </div>
 
@@ -171,30 +175,33 @@
   </div>
 
   <div id="menu-construir">
-    <button onclick="construirAqui('estrada_h')">🛣️ Estrada Horizontal</button>
-    <button onclick="construirAqui('estrada_v')">🛣️ Estrada Vertical</button>
+    <button onclick="construirAqui('estrada_h')">🛣️ Rua Horizontal</button>
+    <button onclick="construirAqui('estrada_v')">🛣️ Rua Vertical</button>
     <button onclick="construirAqui('faixa')">⬜ Faixa Pedestre</button>
+    <button onclick="construirAqui('praca')">🌳 Praça Pública</button>
     <button onclick="abrirLojaNoTile()">🏢 Edifício</button>
     <button onclick="fecharMenu()">Cancelar</button>
   </div>
 
 <script>
   const ITENS = [
-    { id: 'predio_azul', nome: 'Arranha-Céu Vidro', emoji: '🏢', preco: 2000, desc: '+50 população', tipo: 'res', pop: 50, cor: '#4a9eff', h: 400 },
-    { id: 'predio_cinza', nome: 'Edifício Comercial', emoji: '🏬', preco: 800, desc: '+20 população', tipo: 'res', pop: 20, cor: '#888', h: 240 },
-    { id: 'casa', nome: 'Casa', emoji: '🏠', preco: 150, desc: '+4 população', tipo: 'res', pop: 4, cor: '#CD853F', h: 90 },
-    { id: 'hospital', nome: 'Hospital', emoji: '🏥', preco: 1500, desc: 'Saúde', tipo: 'serv', cor: '#FFF', h: 180 },
-    { id: 'hotel', nome: 'Hotel', emoji: '🏨', preco: 2500, desc: '+$80/dia', tipo: 'com', renda: 80, cor: '#DA70D6', h: 300 },
-    { id: 'escola', nome: 'Escola', emoji: '🏫', preco: 1000, desc: 'Educação', tipo: 'serv', cor: '#FFA500', h: 140 },
-    { id: 'estadio', nome: 'Estádio', emoji: '🏟️', preco: 6000, desc: '+$250/dia', tipo: 'lazer', renda: 250, cor: '#32CD32', h: 200 },
-    { id: 'parque', nome: 'Parque', emoji: '🌳', preco: 300, desc: 'Lazer', tipo: 'lazer', cor: '#2d8d2d', h: 40 },
+    { id: 'praca', nome: 'Praça Pública', emoji: '🌳', preco: 500, desc: 'Lazer e árvores', tipo: 'lazer' },
+    { id: 'predio_azul', nome: 'Arranha-Céu Vidro', emoji: '🏢', preco: 5000, desc: '+80 população', tipo: 'res', pop: 80, cor: '#4a9eff', h: 450 },
+    { id: 'predio_cinza', nome: 'Edifício Comercial', emoji: '🏬', preco: 2000, desc: '+40 população', tipo: 'res', pop: 40, cor: '#888', h: 280 },
+    { id: 'hotel', nome: 'Hotel Luxo', emoji: '🏨', preco: 8000, desc: '+$300/dia', tipo: 'com', renda: 300, cor: '#DA70D6', h: 350 },
+    { id: 'casa', nome: 'Casa', emoji: '🏠', preco: 300, desc: '+6 população', tipo: 'res', pop: 6, cor: '#CD853F', h: 100 },
+    { id: 'hospital', nome: 'Hospital', emoji: '🏥', preco: 4000, desc: 'Saúde +$50/dia', tipo: 'serv', renda: 50, cor: '#FFF', h: 200 },
+    { id: 'escola', nome: 'Escola', emoji: '🏫', preco: 2500, desc: 'Educação +$30/dia', tipo: 'serv', renda: 30, cor: '#FFA500', h: 160 },
+    { id: 'estadio', nome: 'Estádio', emoji: '🏟️', preco: 15000, desc: '+$500/dia', tipo: 'lazer', renda: 500, cor: '#32CD32', h: 220 },
+    { id: 'delegacia', nome: 'Delegacia', emoji: '🚓', preco: 3000, desc: 'Segurança', tipo: 'serv', cor: '#4169E1', h: 120 },
   ];
 
-  let dinheiro = 1000, populacao = 0, mapa = {};
+  let dinheiro = 1000000, populacao = 0, mapa = {};
   let tileSelecionado = null, carros = [], pedestres = [];
+  let temEstrada = false;
 
   const mundoEl = document.getElementById('mundo');
-  let scale = 0.5, posX = 0, posY = 0;
+  let scale = 0.45, posX = -1000, posY = -800;
   let isDragging = false, startX, startY;
 
   function updateTransform() {
@@ -205,57 +212,74 @@
   // Desenha prédio no Canvas
   function desenharPredio(item, canvas) {
     const ctx = canvas.getContext('2d');
-    const w = 80, h = item.h;
+    const w = 90, h = item.h;
     canvas.width = w;
-    canvas.height = h + 40;
+    canvas.height = h + 50;
+    
+    // Sombra
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(15, h+45, w-10, 8);
     
     // Corpo principal
     ctx.fillStyle = item.cor;
-    ctx.fillRect(10, 40, w-20, h);
+    ctx.fillRect(10, 50, w-20, h);
     
-    // Sombra lateral
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    // Sombra lateral direita
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
-    ctx.moveTo(w-10, 40);
-    ctx.lineTo(w, 30);
-    ctx.lineTo(w, h+30);
-    ctx.lineTo(w-10, h+40);
+    ctx.moveTo(w-10, 50);
+    ctx.lineTo(w, 40);
+    ctx.lineTo(w, h+40);
+    ctx.lineTo(w-10, h+50);
     ctx.closePath();
     ctx.fill();
     
     // Topo
-    ctx.fillStyle = '#444';
+    ctx.fillStyle = '#333';
     ctx.beginPath();
-    ctx.moveTo(10, 40);
-    ctx.lineTo(20, 30);
-    ctx.lineTo(w-10, 30);
-    ctx.lineTo(w-20, 40);
+    ctx.moveTo(10, 50);
+    ctx.lineTo(20, 40);
+    ctx.lineTo(w-10, 40);
+    ctx.lineTo(w-20, 50);
     ctx.closePath();
     ctx.fill();
     
-    // Janelas
-    ctx.fillStyle = 'rgba(100,200,255,0.6)';
-    for(let y = 50; y < h; y += 25) {
-      for(let x = 20; x < w-20; x += 15) {
-        ctx.fillRect(x, y, 8, 12);
+    // Janelas de vidro azul
+    if (item.id.includes('predio') || item.id === 'hotel') {
+      ctx.fillStyle = 'rgba(100,220,255,0.7)';
+      for(let y = 60; y < h+30; y += 22) {
+        for(let x = 20; x < w-20; x += 14) {
+          ctx.fillRect(x, y, 10, 15);
+        }
+      }
+    } else {
+      // Janelas normais
+      ctx.fillStyle = 'rgba(255,255,180,0.6)';
+      for(let y = 60; y < h+30; y += 25) {
+        for(let x = 20; x < w-20; x += 18) {
+          ctx.fillRect(x, y, 8, 12);
+        }
       }
     }
     
-    // Detalhe no topo
-    if (item.id === 'predio_azul' || item.id === 'hotel') {
+    // Detalhes no topo
+    if (item.id === 'predio_azul') {
       ctx.fillStyle = '#666';
-      ctx.fillRect(w/2-10, 10, 20, 20);
+      ctx.fillRect(w/2-8, 15, 16, 25);
+      ctx.fillStyle = '#999';
+      ctx.fillRect(w/2-5, 10, 10, 5);
     }
-    if (item.id === 'parque') {
-      ctx.fillStyle = '#1d6d1d';
-      ctx.beginPath();
-      ctx.arc(w/2, 20, 15, 0, Math.PI*2);
-      ctx.fill();
+    if (item.id === 'hotel') {
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(w/2-12, 20, 24, 15);
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 10px Arial';
+      ctx.fillText('HOTEL', w/2-12, 32);
     }
   }
 
   // Grid isométrico
-  const TAM = 40;
+  const TAM = 50;
   for(let y = 0; y < TAM; y++) {
     for(let x = 0; x < TAM; x++) {
       const tile = document.createElement('div');
@@ -294,7 +318,7 @@
       const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       if (lastDist) {
         scale *= dist / lastDist;
-        scale = Math.max(0.25, Math.min(1.2, scale));
+        scale = Math.max(0.2, Math.min(1.2, scale));
         updateTransform();
       }
       lastDist = dist;
@@ -346,7 +370,7 @@
 
   function renderizarLoja() {
     const lista = document.getElementById('lista-itens');
-    lista.innerHTML = '';
+    lista.innerHTML = '<div class="categoria">🏢 EDIFÍCIOS</div>';
     ITENS.forEach(item => {
       const div = document.createElement('div');
       div.className = 'item-loja';
@@ -354,7 +378,7 @@
         <div class="item-emoji">${item.emoji}</div>
         <div class="item-info">
           <div class="item-nome">${item.nome}</div>
-          <div class="item-preco">$ ${item.preco}</div>
+          <div class="item-preco">$ ${item.preco.toLocaleString()}</div>
           <div class="item-desc">${item.desc}</div>
         </div>
       `;
@@ -386,46 +410,42 @@
     
     if (itemId === 'estrada_h') {
       tile.className = 'estrada h';
+      temEstrada = true;
     } else if (itemId === 'estrada_v') {
       tile.className = 'estrada v';
+      temEstrada = true;
     } else if (itemId === 'faixa') {
       tile.className = 'faixa';
+    } else if (itemId === 'praca') {
+      tile.className = 'praca';
     } else {
       const building = document.createElement('div');
       building.className = 'building';
       building.style.left = px + 64 + 'px';
       building.style.top = py + 32 + 'px';
-      building.style.zIndex = 1000 - py;
+      building.style.zIndex = 2000 - py;
       
       const canvas = document.createElement('canvas');
       canvas.className = 'building-canvas';
       desenharPredio(item, canvas);
       building.appendChild(canvas);
       mundoEl.appendChild(building);
-      
-      // Árvore aleatória
-      if (Math.random() > 0.5) {
-        const arvore = document.createElement('div');
-        arvore.className = 'arvore';
-        arvore.style.left = px + 64 + (Math.random()*40-20) + 'px';
-        arvore.style.top = py + 32 + (Math.random()*20-10) + 'px';
-        arvore.style.zIndex = 999 - py;
-        mundoEl.appendChild(arvore);
-      }
     }
     
     atualizarHUD();
-    spawnCarro();
-    spawnPedestre();
+    if (temEstrada) {
+      spawnCarro();
+      spawnPedestre();
+    }
   }
 
-  // CARROS
+  // CARROS - SÓ SE TIVER ESTRADA
   function spawnCarro() {
-    if (carros.length > 50) return;
-    const estradas = Object.keys(mapa).filter(k => mapa[k].tipo === 'infra');
-    if (estradas.length < 2) return;
+    if (!temEstrada || carros.length > 60) return;
+    const estradas = Object.keys(mapa).filter(k => mapa[k].item && mapa[k].item.includes('estrada'));
+    if (estradas.length < 3) return;
     
-    const [x, y] = estradas[Math.floor(Math.random() * estradas.length)].split('_').map(Number);
+    const [x][y] = estradas[Math.floor(Math.random() * estradas.length)].split('_').map(Number);
     const tile = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
     const px = parseInt(tile.dataset.isoX);
     const py = parseInt(tile.dataset.isoY);
@@ -436,17 +456,17 @@
     carro.style.top = py + 32 + 'px';
     carro.style.background = ['#F00','#00F','#0F0','#FF0','#FFF','#888'][Math.floor(Math.random()*6)];
     mundoEl.appendChild(carro);
-    carros.push({el: carro, x, y, px, py, vel: 1.2 + Math.random()});
+    carros.push({el: carro, x, y, px, py});
   }
 
-  // PEDESTRES
+  // PEDESTRES - SÓ SE TIVER ESTRADA
   function spawnPedestre() {
-    if (pedestres.length > 80 || populacao < 4) return;
-    const x = Math.floor(Math.random() * TAM);
-    const y = Math.floor(Math.random() * TAM);
-    const tile = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
-    if (!tile) return;
+    if (!temEstrada || pedestres.length > 100 || populacao < 20) return;
+    const estradas = Object.keys(mapa).filter(k => mapa[k].item && mapa[k].item.includes('estrada'));
+    if (estradas.length === 0) return;
     
+    const [x][y] = estradas[Math.floor(Math.random() * estradas.length)].split('_').map(Number);
+    const tile = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
     const px = parseInt(tile.dataset.isoX);
     const py = parseInt(tile.dataset.isoY);
     
@@ -460,18 +480,18 @@
 
   // ANIMAÇÃO
   setInterval(() => {
+    if (!temEstrada) return;
+    
     carros.forEach(c => {
       const dir = Math.random();
-      if (dir < 0.25) c.x++;
-      else if (dir < 0.5) c.x--;
-      else if (dir < 0.75) c.y++;
-      else c.y--;
+      if (dir < 0.5) c.x += (Math.random() > 0.5? 1 : -1);
+      else c.y += (Math.random() > 0.5? 1 : -1);
       
       c.x = Math.max(0, Math.min(TAM-1, c.x));
       c.y = Math.max(0, Math.min(TAM-1, c.y));
       
       const tile = document.querySelector(`[data-x="${Math.round(c.x)}"][data-y="${Math.round(c.y)}"]`);
-      if (tile) {
+      if (tile && tile.className.includes('estrada')) {
         c.px = parseInt(tile.dataset.isoX);
         c.py = parseInt(tile.dataset.isoY);
         c.el.style.left = c.px + 64 + 'px';
@@ -480,8 +500,8 @@
     });
     
     pedestres.forEach(p => {
-      p.x += (Math.random() - 0.5) * 0.5;
-      p.y += (Math.random() - 0.5) * 0.5;
+      p.x += (Math.random() - 0.5) * 0.6;
+      p.y += (Math.random() - 0.5) * 0.6;
       p.x = Math.max(0, Math.min(TAM-1, p.x));
       p.y = Math.max(0, Math.min(TAM-1, p.y));
       
@@ -493,7 +513,7 @@
         p.el.style.top = p.py + 32 + 'px';
       }
     });
-  }, 60);
+  }, 80);
 
   // RENDA
   setInterval(() => {
@@ -506,8 +526,10 @@
       dinheiro += renda;
       atualizarHUD();
     }
-    spawnCarro();
-    spawnPedestre();
+    if (temEstrada) {
+      spawnCarro();
+      spawnPedestre();
+    }
   }, 3000);
 
   function atualizarHUD() {
