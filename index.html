@@ -1,124 +1,171 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>City Builder</title>
+  <title>City Builder 3D</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
     body { 
-      font-family: Arial; background: #2d5016; overflow: hidden; 
+      font-family: Arial; background: #87CEEB; overflow: hidden; 
       touch-action: none;
     }
     
     #game {
-      position: relative; width: 100vw; height: 100vh; overflow: hidden;
+      position: relative; width: 100vw; height: 100vh; 
+      perspective: 1000px; overflow: hidden;
+    }
+    
+    #mundo {
+      position: absolute; top: 50%; left: 50%;
+      transform-style: preserve-3d;
+      transform: rotateX(60deg) rotateZ(45deg) translate(-50%, -50%);
     }
     
     #mapa {
-      position: absolute; width: 2000px; height: 2000px;
-      background: #4a7c2c; background-image: 
-        linear-gradient(0deg, rgba(0,0,0,.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,.1) 1px, transparent 1px);
-      background-size: 50px 50px;
-      transform-origin: 0 0; cursor: grab;
+      position: relative;
+      transform-style: preserve-3d;
+      cursor: grab;
     }
     #mapa.dragging { cursor: grabbing; }
     
-   .tile {
-      position: absolute; width: 50px; height: 50px;
-      border: 1px solid rgba(0,0,0,0.1);
+  .tile {
+      position: absolute; width: 60px; height: 60px;
+      background: #4a7c2c; border: 1px solid #3a6c1c;
+      transform-style: preserve-3d;
     }
-   .tile.vazio:hover { background: rgba(255,255,255,0.2); }
-   .tile.estrada { background: #333; }
-   .tile.estrada::after {
-      content: ''; position: absolute; top: 50%; left: 0; right: 0;
-      height: 2px; background: #FFD700; transform: translateY(-50%);
-    }
-   .edificio {
-      position: absolute; font-size: 35px; 
-      display: flex; align-items: center; justify-content: center;
-      pointer-events: none; z-index: 5;
+  .tile.vazio:hover { filter: brightness(1.3); }
+   
+  .tile.estrada { background: #2a2a2a; }
+  .tile.estrada::after {
+      content: ''; position: absolute; top: 50%; left: 10%; right: 10%;
+      height: 3px; background: #FFD700; transform: translateY(-50%);
     }
     
-   .carro {
-      position: absolute; font-size: 16px; z-index: 10;
-      transition: all 0.1s linear; pointer-events: none;
+  .edificio {
+      position: absolute; width: 60px; height: 60px;
+      transform-style: preserve-3d; pointer-events: none;
     }
-   .pedestre {
-      position: absolute; font-size: 12px; z-index: 8;
+  .edificio.base {
+      position: absolute; width: 60px; height: 60px;
+      background: #666; transform: translateZ(0px);
+    }
+  .edificio.parede {
+      position: absolute; background: #888;
+      transform-origin: bottom;
+    }
+  .edificio.frente {
+      width: 60px; height: 80px; 
+      transform: rotateX(-90deg) translateZ(30px);
+      background: linear-gradient(#999, #666);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 35px;
+    }
+  .edificio.lado {
+      width: 60px; height: 80px;
+      transform: rotateX(-90deg) rotateY(90deg) translateZ(30px);
+      background: linear-gradient(#777, #444);
+    }
+  .edificio.topo {
+      width: 60px; height: 60px;
+      transform: translateZ(80px);
+      background: #555;
+    }
+    
+  .edificio.casa.frente { height: 50px; background: linear-gradient(#8B4513, #654321); }
+  .edificio.casa.lado { height: 50px; background: linear-gradient(#6B3410, #543210); }
+  .edificio.casa.topo { transform: translateZ(50px); background: #A0522D; }
+   
+  .edificio.predio.frente { height: 150px; background: linear-gradient(#5a9bd4, #3a6ba4); }
+  .edificio.predio.lado { height: 150px; background: linear-gradient(#4a8bc4, #2a5b94); }
+  .edificio.predio.topo { transform: translateZ(150px); background: #2a4b84; }
+   
+  .edificio.hospital.frente { height: 90px; background: linear-gradient(#FFF, #DDD); }
+  .edificio.hospital.lado { height: 90px; background: linear-gradient(#EEE, #CCC); }
+  .edificio.hospital.topo { transform: translateZ(90px); background: #F00; }
+    
+  .carro {
+      position: absolute; font-size: 20px; z-index: 100;
+      transition: all 0.1s linear; pointer-events: none;
+      transform: translateZ(5px) rotateZ(-45deg);
+    }
+  .pedestre {
+      position: absolute; font-size: 14px; z-index: 90;
       transition: all 0.5s linear; pointer-events: none;
+      transform: translateZ(2px) rotateZ(-45deg);
     }
 
     #hud {
-      position: fixed; top: 10px; left: 10px; right: 10px; z-index: 100;
-      display: flex; justify-content: space-between; align-items: flex-start;
-      pointer-events: none;
+      position: fixed; top: 10px; left: 10px; right: 10px; z-index: 200;
+      display: flex; justify-content: space-between; pointer-events: none;
     }
-    #dinheiro {
-      background: rgba(0,0,0,0.8); color: #0F0; padding: 10px 15px;
-      border-radius: 10px; font-size: 20px; font-weight: bold;
-      border: 2px solid #0F0; pointer-events: all;
+    #dinheiro, #populacao {
+      background: rgba(0,0,0,0.85); padding: 12px 18px;
+      border-radius: 12px; font-weight: bold; border: 2px solid #0F0;
+      pointer-events: all; backdrop-filter: blur(5px);
     }
-    #populacao {
-      background: rgba(0,0,0,0.8); color: #FFF; padding: 10px 15px;
-      border-radius: 10px; font-size: 16px; pointer-events: all;
-    }
+    #dinheiro { color: #0F0; font-size: 22px; }
+    #populacao { color: #FFF; font-size: 18px; border-color: #FFF; }
     
     #btn-comprar {
-      position: fixed; bottom: 20px; right: 20px; z-index: 100;
-      width: 70px; height: 70px; background: #4CAF50; 
-      border: 3px solid #FFF; border-radius: 50%; 
-      font-size: 35px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      position: fixed; bottom: 25px; right: 25px; z-index: 200;
+      width: 75px; height: 75px; background: #4CAF50; 
+      border: 4px solid #FFF; border-radius: 50%; 
+      font-size: 40px; color: white; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     }
+    #btn-comprar:active { transform: scale(0.9); }
     
     #loja {
-      position: fixed; bottom: -100%; left: 0; right: 0; z-index: 200;
-      background: #1a1a2e; height: 70vh; border-radius: 20px 20px 0 0;
-      transition: bottom 0.3s; overflow-y: auto; padding: 20px;
+      position: fixed; bottom: -100%; left: 0; right: 0; z-index: 300;
+      background: #1a1a2e; height: 75vh; border-radius: 25px 25px 0 0;
+      transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+      overflow-y: auto; padding: 25px;
     }
     #loja.aberta { bottom: 0; }
     #loja-header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 15px; color: white;
+      margin-bottom: 20px; color: white;
     }
     #fechar-loja {
       background: #f44336; color: white; border: none;
-      width: 35px; height: 35px; border-radius: 50%; font-size: 20px;
+      width: 40px; height: 40px; border-radius: 50%; font-size: 24px;
     }
     
-   .item-loja {
-      background: #0f0f1e; padding: 15px; margin: 10px 0;
-      border-radius: 10px; display: flex; align-items: center; gap: 15px;
-      border: 2px solid #333;
+  .item-loja {
+      background: #0f0f1e; padding: 18px; margin: 12px 0;
+      border-radius: 12px; display: flex; align-items: center; gap: 18px;
+      border: 2px solid #333; transition: all 0.2s;
     }
-   .item-loja:active { background: #2a2a4e; }
-   .item-emoji { font-size: 40px; }
-   .item-info { flex: 1; color: white; }
-   .item-nome { font-size: 18px; font-weight: bold; }
-   .item-preco { color: #0F0; font-size: 16px; }
-   .item-desc { color: #AAA; font-size: 12px; margin-top: 3px; }
+  .item-loja:active { background: #2a2a4e; transform: scale(0.98); }
+  .item-emoji { font-size: 45px; }
+  .item-info { flex: 1; color: white; }
+  .item-nome { font-size: 20px; font-weight: bold; }
+  .item-preco { color: #0F0; font-size: 18px; margin-top: 3px; }
+  .item-desc { color: #AAA; font-size: 13px; margin-top: 5px; }
     
     #menu-construir {
-      position: fixed; background: rgba(0,0,0,0.95); padding: 15px;
-      border-radius: 10px; z-index: 150; display: none;
-      border: 2px solid #4CAF50;
+      position: fixed; background: rgba(0,0,0,0.95); padding: 18px;
+      border-radius: 12px; z-index: 250; display: none;
+      border: 3px solid #4CAF50; backdrop-filter: blur(10px);
     }
     #menu-construir button {
-      display: block; width: 200px; padding: 12px; margin: 5px 0;
-      background: #4CAF50; color: white; border: none; border-radius: 5px;
-      font-size: 16px; font-weight: bold;
+      display: block; width: 220px; padding: 14px; margin: 8px 0;
+      background: #4CAF50; color: white; border: none; border-radius: 8px;
+      font-size: 17px; font-weight: bold;
     }
+    #menu-construir button:active { background: #45a049; }
     
     #toast {
-      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-      background: #f44336; color: white; padding: 10px 20px;
-      border-radius: 20px; z-index: 300; display: none;
+      position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
+      background: #f44336; color: white; padding: 12px 25px;
+      border-radius: 25px; z-index: 400; display: none; font-weight: bold;
     }
   </style>
 </head>
 <body>
   <div id="game">
-    <div id="mapa"></div>
+    <div id="mundo">
+      <div id="mapa"></div>
+    </div>
   </div>
 
   <div id="hud">
@@ -138,50 +185,48 @@
   </div>
 
   <div id="menu-construir">
-    <button onclick="construirAqui('estrada')">🛣️ Construir Estrada</button>
-    <button onclick="abrirLojaNoTile()">🏢 Construir Edifício</button>
+    <button onclick="construirAqui('estrada')">🛣️ Estrada</button>
+    <button onclick="abrirLojaNoTile()">🏢 Edifício</button>
     <button onclick="fecharMenu()">Cancelar</button>
   </div>
 
 <script>
   const ITENS = [
     { id: 'estrada', nome: 'Estrada', emoji: '🛣️', preco: 10, desc: 'Conecta a cidade', tipo: 'infra' },
-    { id: 'casa', nome: 'Casa', emoji: '🏠', preco: 100, desc: '+4 população', tipo: 'res', pop: 4 },
-    { id: 'predio', nome: 'Prédio', emoji: '🏢', preco: 500, desc: '+20 população', tipo: 'res', pop: 20 },
-    { id: 'escola', nome: 'Escola', emoji: '🏫', preco: 800, desc: 'Educação', tipo: 'serv' },
-    { id: 'hospital', nome: 'Hospital', emoji: '🏥', preco: 1200, desc: 'Saúde', tipo: 'serv' },
-    { id: 'delegacia', nome: 'Delegacia', emoji: '🚓', preco: 900, desc: 'Segurança', tipo: 'serv' },
-    { id: 'hotel', nome: 'Hotel', emoji: '🏨', preco: 1500, desc: 'Turismo +$50/dia', tipo: 'com', renda: 50 },
-    { id: 'lanchonete', nome: 'Lanchonete', emoji: '🍔', preco: 300, desc: '+$20/dia', tipo: 'com', renda: 20 },
-    { id: 'restaurante', nome: 'Restaurante', emoji: '🍽️', preco: 600, desc: '+$40/dia', tipo: 'com', renda: 40 },
-    { id: 'fazenda', nome: 'Fazenda', emoji: '🚜', preco: 400, desc: '+$30/dia', tipo: 'com', renda: 30 },
-    { id: 'estadio', nome: 'Estádio', emoji: '🏟️', preco: 5000, desc: 'Lazer +$200/dia', tipo: 'lazer', renda: 200 }
+    { id: 'casa', nome: 'Casa', emoji: '🏠', preco: 100, desc: '+4 população', tipo: 'res', pop: 4, altura: 50 },
+    { id: 'predio', nome: 'Prédio', emoji: '🏢', preco: 500, desc: '+20 população', tipo: 'res', pop: 20, altura: 150 },
+    { id: 'escola', nome: 'Escola', emoji: '🏫', preco: 800, desc: 'Educação', tipo: 'serv', altura: 80 },
+    { id: 'hospital', nome: 'Hospital', emoji: '🏥', preco: 1200, desc: 'Saúde', tipo: 'serv', altura: 90 },
+    { id: 'delegacia', nome: 'Delegacia', emoji: '🚓', preco: 900, desc: 'Segurança', tipo: 'serv', altura: 70 },
+    { id: 'hotel', nome: 'Hotel', emoji: '🏨', preco: 1500, desc: '+$50/dia', tipo: 'com', renda: 50, altura: 120 },
+    { id: 'lanchonete', nome: 'Lanchonete', emoji: '🍔', preco: 300, desc: '+$20/dia', tipo: 'com', renda: 20, altura: 60 },
+    { id: 'restaurante', nome: 'Restaurante', emoji: '🍽️', preco: 600, desc: '+$40/dia', tipo: 'com', renda: 40, altura: 70 },
+    { id: 'fazenda', nome: 'Fazenda', emoji: '🚜', preco: 400, desc: '+$30/dia', tipo: 'com', renda: 30, altura: 40 },
+    { id: 'estadio', nome: 'Estádio', emoji: '🏟️', preco: 5000, desc: '+$200/dia', tipo: 'lazer', renda: 200, altura: 100 }
   ];
 
-  let dinheiro = 1000;
-  let populacao = 0;
-  let mapa = {}; // {x_y: {tipo, item}}
-  let tileSelecionado = null;
-  let carros = [];
-  let pedestres = [];
+  let dinheiro = 1000, populacao = 0, mapa = {};
+  let tileSelecionado = null, carros = [], pedestres = [];
 
-  // MAPA - Pan e Zoom
+  // MAPA ISOMÉTRICO
+  const mundoEl = document.getElementById('mundo');
   const mapaEl = document.getElementById('mapa');
-  let scale = 1, x = -500, y = -500;
+  let scale = 0.8, rotZ = 45, posX = 0, posY = 0;
   let isDragging = false, startX, startY;
-  
-  function updateTransform() {
-    mapaEl.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-  }
-  updateTransform();
 
-  // Gerar tiles
-  for(let i = 0; i < 40; i++) {
-    for(let j = 0; j < 40; j++) {
+  function updateMundo() {
+    mundoEl.style.transform = `rotateX(60deg) rotateZ(${rotZ}deg) translate(${posX}px, ${posY}px) scale(${scale})`;
+  }
+  updateMundo();
+
+  // Gerar grid 30x30
+  const TAM = 30;
+  for(let i = 0; i < TAM; i++) {
+    for(let j = 0; j < TAM; j++) {
       const tile = document.createElement('div');
       tile.className = 'tile vazio';
-      tile.style.left = i * 50 + 'px';
-      tile.style.top = j * 50 + 'px';
+      tile.style.left = i * 60 + 'px';
+      tile.style.top = j * 60 + 'px';
       tile.dataset.x = i;
       tile.dataset.y = j;
       tile.onclick = (e) => clicarTile(i, j, e);
@@ -193,53 +238,42 @@
   mapaEl.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       isDragging = true;
-      startX = e.touches[0].clientX - x;
-      startY = e.touches[0].clientY - y;
+      startX = e.touches[0].clientX - posX;
+      startY = e.touches[0].clientY - posY;
       mapaEl.classList.add('dragging');
     }
   });
   mapaEl.addEventListener('touchmove', (e) => {
     if (isDragging && e.touches.length === 1) {
-      x = e.touches[0].clientX - startX;
-      y = e.touches[0].clientY - startY;
-      updateTransform();
+      posX = e.touches[0].clientX - startX;
+      posY = e.touches[0].clientY - startY;
+      updateMundo();
+    }
+    // Zoom
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      if (window.lastDist) {
+        scale *= dist / window.lastDist;
+        scale = Math.max(0.4, Math.min(1.5, scale));
+        updateMundo();
+      }
+      window.lastDist = dist;
     }
   });
   mapaEl.addEventListener('touchend', () => {
     isDragging = false;
+    window.lastDist = 0;
     mapaEl.classList.remove('dragging');
   });
 
-  // Zoom com 2 dedos
-  let lastDist = 0;
-  mapaEl.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      if (lastDist > 0) {
-        scale *= dist / lastDist;
-        scale = Math.max(0.5, Math.min(2, scale));
-        updateTransform();
-      }
-      lastDist = dist;
-    }
-  });
-  mapaEl.addEventListener('touchend', () => lastDist = 0);
-
-  // CLICAR NO TERRENO
   function clicarTile(tx, ty, e) {
     if (isDragging) return;
     e.stopPropagation();
     tileSelecionado = {x: tx, y: ty};
     
     const key = `${tx}_${ty}`;
-    if (mapa[key]) {
-      mostrarToast('Já tem construção aqui!');
-      return;
-    }
+    if (mapa[key]) return mostrarToast('Terreno ocupado!');
     
     const menu = document.getElementById('menu-construir');
     menu.style.display = 'block';
@@ -297,7 +331,7 @@
     });
   }
 
-  // CONSTRUIR
+  // CONSTRUIR 3D
   function construir(itemId, tx, ty) {
     const item = ITENS.find(i => i.id === itemId);
     const key = `${tx}_${ty}`;
@@ -307,83 +341,90 @@
     
     dinheiro -= item.preco;
     mapa[key] = { tipo: item.tipo, item: itemId };
-    
     if (item.pop) populacao += item.pop;
     
-    // Visual
     const tile = document.querySelector(`[data-x="${tx}"][data-y="${ty}"]`);
+    
     if (itemId === 'estrada') {
       tile.className = 'tile estrada';
     } else {
       const edificio = document.createElement('div');
-      edificio.className = 'edificio';
-      edificio.style.left = tx * 50 + 'px';
-      edificio.style.top = ty * 50 + 'px';
-      edificio.innerHTML = item.emoji;
+      edificio.className = `edificio ${itemId}`;
+      edificio.style.left = tx * 60 + 'px';
+      edificio.style.top = ty * 60 + 'px';
+      
+      const altura = item.altura || 80;
+      edificio.innerHTML = `
+        <div class="base"></div>
+        <div class="parede frente" style="height:${altura}px">${item.emoji}</div>
+        <div class="parede lado" style="height:${altura}px"></div>
+        <div class="topo" style="transform:translateZ(${altura}px)"></div>
+      `;
       mapaEl.appendChild(edificio);
       tile.className = 'tile ocupado';
     }
     
     atualizarHUD();
-    spawnCarroSeTemEstrada();
+    spawnCarro();
     spawnPedestre();
   }
 
-  // CARROS ANDANDO
-  function spawnCarroSeTemEstrada() {
-    if (carros.length > 10) return;
+  // CARROS
+  function spawnCarro() {
+    if (carros.length > 12) return;
     const estradas = Object.keys(mapa).filter(k => mapa[k].tipo === 'infra');
-    if (estradas.length < 3) return;
+    if (estradas.length < 2) return;
     
     const [x, y] = estradas[Math.floor(Math.random() * estradas.length)].split('_').map(Number);
     const carro = document.createElement('div');
     carro.className = 'carro';
-    carro.innerHTML = ['🚗','🚕','🚙'][Math.floor(Math.random()*3)];
-    carro.style.left = x * 50 + 15 + 'px';
-    carro.style.top = y * 50 + 15 + 'px';
+    carro.innerHTML = ['🚗','🚕','🚙','🚐'][Math.floor(Math.random()*4)];
+    carro.style.left = x * 60 + 20 + 'px';
+    carro.style.top = y * 60 + 20 + 'px';
     mapaEl.appendChild(carro);
-    carros.push({el: carro, x, y, dir: Math.floor(Math.random()*4)});
+    carros.push({el: carro, x, y, dir: Math.floor(Math.random()*4), vel: 0.3 + Math.random()*0.3});
   }
 
   // PEDESTRES
   function spawnPedestre() {
-    if (pedestres.length > 15 || populacao < 4) return;
-    const x = Math.floor(Math.random() * 40);
-    const y = Math.floor(Math.random() * 40);
+    if (pedestres.length > 20 || populacao < 4) return;
+    const x = Math.floor(Math.random() * TAM);
+    const y = Math.floor(Math.random() * TAM);
     const pedestre = document.createElement('div');
     pedestre.className = 'pedestre';
-    pedestre.innerHTML = '🚶';
-    pedestre.style.left = x * 50 + 20 + 'px';
-    pedestre.style.top = y * 50 + 20 + 'px';
+    pedestre.innerHTML = ['🚶','🚶‍♀️','🚶‍♂️'][Math.floor(Math.random()*3)];
+    pedestre.style.left = x * 60 + 25 + 'px';
+    pedestre.style.top = y * 60 + 25 + 'px';
     mapaEl.appendChild(pedestre);
     pedestres.push({el: pedestre, x, y});
   }
 
-  // ANIMAÇÃO CARROS
+  // ANIMAÇÃO
   setInterval(() => {
     carros.forEach(c => {
       const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
-      c.x += dirs[c.dir][0] * 0.5;
-      c.y += dirs[c.dir][1] * 0.5;
-      c.el.style.left = c.x * 50 + 15 + 'px';
-      c.el.style.top = c.y * 50 + 15 + 'px';
+      c.x += dirs[c.dir][0] * c.vel;
+      c.y += dirs[c.dir][1] * c.vel;
+      c.el.style.left = c.x * 60 + 20 + 'px';
+      c.el.style.top = c.y * 60 + 20 + 'px';
+      c.el.style.transform = `translateZ(5px) rotateZ(${-45 + c.dir*90}deg)`;
       
-      if (Math.random() < 0.02) c.dir = Math.floor(Math.random()*4);
-      if (c.x < 0 || c.x > 39 || c.y < 0 || c.y > 39) {
+      if (Math.random() < 0.01) c.dir = Math.floor(Math.random()*4);
+      if (c.x < 0 || c.x > TAM-1 || c.y < 0 || c.y > TAM-1) {
         c.el.remove();
         carros = carros.filter(car => car!== c);
       }
     });
     
     pedestres.forEach(p => {
-      p.x += (Math.random() - 0.5) * 0.3;
-      p.y += (Math.random() - 0.5) * 0.3;
-      p.el.style.left = p.x * 50 + 20 + 'px';
-      p.el.style.top = p.y * 50 + 20 + 'px';
+      p.x += (Math.random() - 0.5) * 0.2;
+      p.y += (Math.random() - 0.5) * 0.2;
+      p.el.style.left = p.x * 60 + 25 + 'px';
+      p.el.style.top = p.y * 60 + 25 + 'px';
     });
-  }, 100);
+  }, 50);
 
-  // RENDA PASSIVA
+  // RENDA
   setInterval(() => {
     let renda = 0;
     Object.values(mapa).forEach(m => {
@@ -394,7 +435,9 @@
       dinheiro += renda;
       atualizarHUD();
     }
-  }, 5000);
+    spawnCarro();
+    spawnPedestre();
+  }, 4000);
 
   function atualizarHUD() {
     document.getElementById('dinheiro').innerText = `$ ${dinheiro.toLocaleString()}`;
@@ -408,11 +451,8 @@
     setTimeout(() => toast.style.display = 'none', 2000);
   }
 
-  // Fechar menu ao clicar fora
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('#menu-construir') &&!e.target.closest('.tile')) {
-      fecharMenu();
-    }
+    if (!e.target.closest('#menu-construir') &&!e.target.closest('.tile')) fecharMenu();
   });
 
   atualizarHUD();
