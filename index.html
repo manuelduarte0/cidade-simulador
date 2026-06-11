@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-    body { font-family: Arial; background: #87CEEB; overflow: hidden; touch-action: none; }
+    body { font-family: Arial; background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 100%); overflow: hidden; touch-action: none; }
     
     #viewport {
       position: fixed; width: 100vw; height: 100vh; 
-      perspective: 800px; overflow: hidden;
+      perspective: 1000px; overflow: hidden;
     }
     
     #camera {
       position: absolute; top: 50%; left: 50%;
       transform-style: preserve-3d;
-      transform: translate3d(-50%, -50%, 0) rotateX(60deg) rotateZ(45deg);
+      transform: translate3d(-50%, -50%, 0) rotateX(50deg) rotateZ(45deg);
     }
     
     #mundo {
@@ -23,137 +23,174 @@
       transform-style: preserve-3d;
     }
     
-.tile {
-      position: absolute; width: 80px; height: 80px;
-      background: #4a7c2c; 
-      border: 1px solid #3a6c1c;
+  .tile {
+      position: absolute; width: 60px; height: 60px;
+      background: #3d7d3d; border: 0.5px solid #2d6d2d;
       transform: translateZ(0px);
     }
-.tile.vazio:active { filter: brightness(1.5); }
+  .tile.vazio:active { filter: brightness(1.6); }
     
-.tile.estrada { 
-      background: #2a2a2a; 
-      box-shadow: inset 0 0 0 1px #1a1a1a;
+  .tile.estrada { 
+      background: #333; 
+      box-shadow: inset 0 0 0 1px #222;
     }
-.tile.estrada::after {
-      content: ''; position: absolute; top: 50%; left: 20%; right: 20%;
-      height: 4px; background: #FFD700; transform: translateY(-50%);
+  .tile.estrada::before {
+      content: ''; position: absolute; top: 50%; left: 0; right: 0;
+      height: 3px; background: repeating-linear-gradient(90deg, #FFD700 0px, #FFD700 15px, transparent 15px, transparent 25px);
+      transform: translateY(-50%);
     }
     
-.building {
-      position: absolute; width: 80px; height: 80px;
+   /* PRÉDIO 3D REAL */
+ .building {
+      position: absolute; width: 60px; height: 60px;
       transform-style: preserve-3d; pointer-events: none;
     }
     
-    /* Cubo 3D de verdade */
-.cube { position: absolute; width: 80px; height: 80px; transform-style: preserve-3d; }
-.cube.face {
-      position: absolute; width: 80px; height: 80px;
-      background: rgba(100,100,100,0.9); border: 2px solid #333;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 40px;
+ .building-box {
+      position: absolute; width: 60px; height: 60px;
+      transform-style: preserve-3d;
+      animation: aparecer 0.5s ease-out;
     }
-.cube.top { transform: rotateX(90deg) translateZ(40px); background: #666; }
-.cube.front { transform: translateZ(40px); background: linear-gradient(#888, #666); }
-.cube.right { transform: rotateY(90deg) translateZ(40px); background: linear-gradient(#777, #555); }
-.cube.back { transform: rotateY(180deg) translateZ(40px); background: #555; }
-.cube.left { transform: rotateY(-90deg) translateZ(40px); background: #666; }
-.cube.bottom { transform: rotateX(-90deg) translateZ(40px); background: #444; }
     
-    /* Altura dos prédios */
-.building.casa.cube { height: 80px; }
-.building.casa.front,.building.casa.right,.building.casa.back,.building.casa.left { height: 80px; }
-.building.casa.top { transform: rotateX(90deg) translateZ(40px) translateY(-80px); }
-.building.casa.front { transform: translateZ(40px) translateY(-80px); background: linear-gradient(#8B4513, #CD853F); }
-.building.casa.right { transform: rotateY(90deg) translateZ(40px) translateY(-80px); background: linear-gradient(#654321, #A0522D); }
-    
-.building.predio.cube { height: 240px; }
-.building.predio.front,.building.predio.right,.building.predio.back,.building.predio.left { height: 240px; }
-.building.predio.top { transform: rotateX(90deg) translateZ(40px) translateY(-240px); background: #0e3a88; }
-.building.predio.front { transform: translateZ(40px) translateY(-240px); background: linear-gradient(#1e5aa8, #4a9eff); }
-.building.predio.right { transform: rotateY(90deg) translateZ(40px) translateY(-240px); background: linear-gradient(#0e4a98, #3a8eee); }
-    
-.building.hospital.cube { height: 120px; }
-.building.hospital.front,.building.hospital.right,.building.hospital.back,.building.hospital.left { height: 120px; }
-.building.hospital.top { transform: rotateX(90deg) translateZ(40px) translateY(-120px); background: #F00; }
-.building.hospital.front { transform: translateZ(40px) translateY(-120px); background: linear-gradient(#DDD, #FFF); }
-.building.hospital.right { transform: rotateY(90deg) translateZ(40px) translateY(-120px); background: linear-gradient(#CCC, #EEE); }
-    
-.building.hotel.cube { height: 200px; }
-.building.hotel.front,.building.hotel.right,.building.hotel.back,.building.hotel.left { height: 200px; }
-.building.hotel.top { transform: rotateX(90deg) translateZ(40px) translateY(-200px); background: #6B006B; }
-.building.hotel.front { transform: translateZ(40px) translateY(-200px); background: linear-gradient(#8B008B, #DA70D6); }
-.building.hotel.right { transform: rotateY(90deg) translateZ(40px) translateY(-200px); background: linear-gradient(#7B007B, #CA60C6); }
-    
-.carro {
-      position: absolute; font-size: 24px; z-index: 100;
-      transform: translateZ(5px) rotateZ(-45deg);
-      transition: all 0.15s linear; pointer-events: none;
+    @keyframes aparecer {
+      from { transform: scale3d(1,1,0); }
+      to { transform: scale3d(1,1,1); }
     }
-.pedestre {
-      position: absolute; font-size: 18px; z-index: 90;
+    
+ .face {
+      position: absolute; width: 60px;
+      background: #ccc; border: 1px solid rgba(0,0,0,0.2);
+    }
+    
+  /* Faces do cubo */
+ .face.front { transform: rotateY(0deg) translateZ(30px); }
+ .face.back { transform: rotateY(180deg) translateZ(30px); }
+ .face.right { transform: rotateY(90deg) translateZ(30px); }
+ .face.left { transform: rotateY(-90deg) translateZ(30px); }
+ .face.top { 
+      transform: rotateX(90deg) translateZ(30px); 
+      background: #999;
+      width: 60px; height: 60px;
+    }
+    
+    /* Janelas nos prédios */
+ .face.front::after,.face.back::after,.face.right::after,.face.left::after {
+      content: ''; position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%;
+      background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(0,0,0,0.3) 8px, rgba(0,0,0,0.3) 10px),
+        repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.3) 8px, rgba(0,0,0,0.3) 10px);
+    }
+    
+    /* Alturas e cores por tipo */
+ .building.casa.face { height: 50px; }
+ .building.casa.top { transform: rotateX(90deg) translateZ(30px) translateY(-50px); }
+ .building.casa.front { transform: translateZ(30px) translateY(-50px); background: #D2691E; }
+ .building.casa.back { transform: rotateY(180deg) translateZ(30px) translateY(-50px); background: #B2590E; }
+ .building.casa.right { transform: rotateY(90deg) translateZ(30px) translateY(-50px); background: #A0490E; }
+ .building.casa.left { transform: rotateY(-90deg) translateZ(30px) translateY(-50px); background: #8B4513; }
+    
+ .building.predio.face { height: 200px; }
+ .building.predio.top { transform: rotateX(90deg) translateZ(30px) translateY(-200px); background: #2a5a8a; }
+ .building.predio.front { transform: translateZ(30px) translateY(-200px); background: linear-gradient(to bottom, #4a9eff, #2a5a8a); }
+ .building.predio.back { transform: rotateY(180deg) translateZ(30px) translateY(-200px); background: linear-gradient(to bottom, #3a8eee, #1a4a7a); }
+ .building.predio.right { transform: rotateY(90deg) translateZ(30px) translateY(-200px); background: linear-gradient(to bottom, #2a7ede, #0a3a6a); }
+ .building.predio.left { transform: rotateY(-90deg) translateZ(30px) translateY(-200px); background: linear-gradient(to bottom, #1a6ece, #003a5a); }
+    
+ .building.hospital.face { height: 110px; }
+ .building.hospital.top { transform: rotateX(90deg) translateZ(30px) translateY(-110px); background: #C00; }
+ .building.hospital.front { transform: translateZ(30px) translateY(-110px); background: #FFF; }
+ .building.hospital.back { transform: rotateY(180deg) translateZ(30px) translateY(-110px); background: #EEE; }
+ .building.hospital.right { transform: rotateY(90deg) translateZ(30px) translateY(-110px); background: #DDD; }
+ .building.hospital.left { transform: rotateY(-90deg) translateZ(30px) translateY(-110px); background: #CCC; }
+    
+ .building.hotel.face { height: 180px; }
+ .building.hotel.top { transform: rotateX(90deg) translateZ(30px) translateY(-180px); background: #6B006B; }
+ .building.hotel.front { transform: translateZ(30px) translateY(-180px); background: linear-gradient(to bottom, #DA70D6, #8B008B); }
+ .building.hotel.back { transform: rotateY(180deg) translateZ(30px) translateY(-180px); background: linear-gradient(to bottom, #CA60C6, #7B007B); }
+ .building.hotel.right { transform: rotateY(90deg) translateZ(30px) translateY(-180px); background: linear-gradient(to bottom, #BA50B6, #6B006B); }
+ .building.hotel.left { transform: rotateY(-90deg) translateZ(30px) translateY(-180px); background: linear-gradient(to bottom, #AA40A6, #5B005B); }
+    
+ .building.escola.face { height: 90px; }
+ .building.escola.top { transform: rotateX(90deg) translateZ(30px) translateY(-90px); background: #B2590E; }
+ .building.escola.front { transform: translateZ(30px) translateY(-90px); background: linear-gradient(to bottom, #FFA500, #D2691E); }
+ .building.escola.right { transform: rotateY(90deg) translateZ(30px) translateY(-90px); background: linear-gradient(to bottom, #EF9500, #C2590E); }
+    
+ .carro {
+      position: absolute; width: 20px; height: 12px; z-index: 100;
+      transform: translateZ(3px) rotateZ(-45deg);
+      transition: all 0.1s linear; pointer-events: none;
+    }
+ .carro::before {
+      content: ''; position: absolute; width: 100%; height: 100%;
+      background: #F00; border-radius: 3px;
+      box-shadow: 0 0 0 1px #000;
+    }
+    
+ .pedestre {
+      position: absolute; width: 4px; height: 4px; z-index: 90;
       transform: translateZ(2px) rotateZ(-45deg);
-      transition: all 0.8s linear; pointer-events: none;
+      background: #000; border-radius: 50%;
+      transition: all 0.6s linear; pointer-events: none;
     }
 
     #hud {
-      position: fixed; top: 12px; left: 12px; right: 12px; z-index: 200;
+      position: fixed; top: 15px; left: 15px; right: 15px; z-index: 200;
       display: flex; justify-content: space-between; pointer-events: none;
     }
     #dinheiro, #populacao {
-      background: rgba(0,0,0,0.9); padding: 14px 20px; border-radius: 14px; 
-      font-weight: bold; border: 3px solid #0F0; backdrop-filter: blur(10px);
-      pointer-events: all; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.9); padding: 14px 22px; border-radius: 16px; 
+      font-weight: bold; border: 4px solid #0F0; backdrop-filter: blur(12px);
+      pointer-events: all; box-shadow: 0 6px 25px rgba(0,0,0,0.5);
     }
-    #dinheiro { color: #0F0; font-size: 24px; }
-    #populacao { color: #FFF; font-size: 20px; border-color: #FFF; }
+    #dinheiro { color: #0F0; font-size: 26px; }
+    #populacao { color: #FFF; font-size: 22px; border-color: #FFF; }
     
     #btn-comprar {
-      position: fixed; bottom: 30px; right: 30px; z-index: 200;
-      width: 85px; height: 85px; background: #4CAF50; 
-      border: 5px solid #FFF; border-radius: 50%; font-size: 45px; 
-      color: white; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+      position: fixed; bottom: 35px; right: 35px; z-index: 200;
+      width: 90px; height: 90px; background: #4CAF50; 
+      border: 6px solid #FFF; border-radius: 50%; font-size: 48px; 
+      color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    #btn-comprar:active { transform: scale(0.9); }
+    #btn-comprar:active { transform: scale(0.88); }
     
     #loja {
       position: fixed; bottom: -100%; left: 0; right: 0; z-index: 300;
-      background: #1a1a2e; height: 75vh; border-radius: 25px 25px 0 0;
+      background: #1a1a2e; height: 80vh; border-radius: 30px 30px 0 0;
       transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
-      overflow-y: auto; padding: 25px;
+      overflow-y: auto; padding: 30px;
     }
     #loja.aberta { bottom: 0; }
-    #loja-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: white; }
-    #fechar-loja { background: #f44336; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 28px; }
+    #loja-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; color: white; }
+    #fechar-loja { background: #f44336; color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 30px; }
     
 .item-loja {
-      background: #0f0f1e; padding: 20px; margin: 14px 0; border-radius: 14px; 
-      display: flex; align-items: center; gap: 20px; border: 3px solid #333;
+      background: #0f0f1e; padding: 22px; margin: 16px 0; border-radius: 16px; 
+      display: flex; align-items: center; gap: 22px; border: 3px solid #333;
     }
-.item-loja:active { background: #2a2a4e; transform: scale(0.98); }
-.item-emoji { font-size: 52px; }
+.item-loja:active { background: #2a2a4e; transform: scale(0.97); }
+.item-emoji { font-size: 56px; }
 .item-info { flex: 1; color: white; }
-.item-nome { font-size: 22px; font-weight: bold; }
-.item-preco { color: #0F0; font-size: 20px; margin-top: 4px; }
-.item-desc { color: #AAA; font-size: 14px; margin-top: 6px; }
+.item-nome { font-size: 24px; font-weight: bold; }
+.item-preco { color: #0F0; font-size: 22px; margin-top: 5px; }
+.item-desc { color: #AAA; font-size: 15px; margin-top: 7px; }
     
     #menu-construir {
-      position: fixed; background: rgba(0,0,0,0.95); padding: 20px;
-      border-radius: 14px; z-index: 250; display: none;
-      border: 4px solid #4CAF50; backdrop-filter: blur(12px);
+      position: fixed; background: rgba(0,0,0,0.95); padding: 22px;
+      border-radius: 16px; z-index: 250; display: none;
+      border: 4px solid #4CAF50; backdrop-filter: blur(15px);
     }
     #menu-construir button {
-      display: block; width: 240px; padding: 16px; margin: 10px 0;
-      background: #4CAF50; color: white; border: none; border-radius: 10px;
-      font-size: 18px; font-weight: bold;
+      display: block; width: 260px; padding: 18px; margin: 12px 0;
+      background: #4CAF50; color: white; border: none; border-radius: 12px;
+      font-size: 19px; font-weight: bold;
     }
     #menu-construir button:active { background: #45a049; }
     
     #toast {
-      position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
-      background: #f44336; color: white; padding: 14px 28px;
-      border-radius: 28px; z-index: 400; display: none; font-weight: bold;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4); font-size: 16px;
+      position: fixed; top: 110px; left: 50%; transform: translateX(-50%);
+      background: #f44336; color: white; padding: 16px 32px;
+      border-radius: 32px; z-index: 400; display: none; font-weight: bold;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.4); font-size: 17px;
     }
   </style>
 </head>
@@ -206,22 +243,22 @@
 
   const cameraEl = document.getElementById('camera');
   const mundoEl = document.getElementById('mundo');
-  let scale = 0.7, rotZ = 45, posX = 0, posY = 0;
+  let scale = 0.6, rotZ = 45, posX = 0, posY = 0;
   let isDragging = false, startX, startY;
 
   function updateCamera() {
-    cameraEl.style.transform = `translate3d(-50%, -50%, 0) rotateX(60deg) rotateZ(${rotZ}deg) translate3d(${posX}px, ${posY}px, 0) scale(${scale})`;
+    cameraEl.style.transform = `translate3d(-50%, -50%, 0) rotateX(50deg) rotateZ(${rotZ}deg) translate3d(${posX}px, ${posY}px, 0) scale(${scale})`;
   }
   updateCamera();
 
-  // Grid 25x25
-  const TAM = 25;
+  // Grid 30x30
+  const TAM = 30;
   for(let i = 0; i < TAM; i++) {
     for(let j = 0; j < TAM; j++) {
       const tile = document.createElement('div');
       tile.className = 'tile vazio';
-      tile.style.left = i * 80 + 'px';
-      tile.style.top = j * 80 + 'px';
+      tile.style.left = i * 60 + 'px';
+      tile.style.top = j * 60 + 'px';
       tile.dataset.x = i;
       tile.dataset.y = j;
       tile.onclick = (e) => clicarTile(i, j, e);
@@ -250,7 +287,7 @@
       const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       if (lastDist) {
         scale *= dist / lastDist;
-        scale = Math.max(0.3, Math.min(1.3, scale));
+        scale = Math.max(0.3, Math.min(1.2, scale));
         updateCamera();
       }
       lastDist = dist;
@@ -345,15 +382,14 @@
     } else {
       const building = document.createElement('div');
       building.className = `building ${itemId}`;
-      building.style.left = tx * 80 + 'px';
-      building.style.top = ty * 80 + 'px';
-      
+      building.style.left = tx * 60 + 'px';
+      building.style.top = ty * 60 + 'px';
       building.innerHTML = `
         <div class="cube">
           <div class="face top"></div>
-          <div class="face front">${item.emoji}</div>
-          <div class="face right"></div>
+          <div class="face front"></div>
           <div class="face back"></div>
+          <div class="face right"></div>
           <div class="face left"></div>
           <div class="face bottom"></div>
         </div>
@@ -369,30 +405,28 @@
 
   // CARROS
   function spawnCarro() {
-    if (carros.length > 20) return;
+    if (carros.length > 25) return;
     const estradas = Object.keys(mapa).filter(k => mapa[k].tipo === 'infra');
     if (estradas.length < 2) return;
     
     const [x, y] = estradas[Math.floor(Math.random() * estradas.length)].split('_').map(Number);
     const carro = document.createElement('div');
     carro.className = 'carro';
-    carro.innerHTML = ['🚗','🚕','🚙','🚐','🚛'][Math.floor(Math.random()*5)];
-    carro.style.left = x * 80 + 40 + 'px';
-    carro.style.top = y * 80 + 40 + 'px';
+    carro.style.left = x * 60 + 30 + 'px';
+    carro.style.top = y * 60 + 30 + 'px';
     mundoEl.appendChild(carro);
-    carros.push({el: carro, x, y, vel: 0.5 + Math.random()*0.5});
+    carros.push({el: carro, x, y, vel: 0.6 + Math.random()*0.6});
   }
 
   // PEDESTRES
   function spawnPedestre() {
-    if (pedestres.length > 30 || populacao < 4) return;
+    if (pedestres.length > 40 || populacao < 4) return;
     const x = Math.floor(Math.random() * TAM);
     const y = Math.floor(Math.random() * TAM);
     const pedestre = document.createElement('div');
     pedestre.className = 'pedestre';
-    pedestre.innerHTML = ['🚶','🚶‍♀️','🚶‍♂️'][Math.floor(Math.random()*3)];
-    pedestre.style.left = x * 80 + 40 + 'px';
-    pedestre.style.top = y * 80 + 40 + 'px';
+    pedestre.style.left = x * 60 + 30 + 'px';
+    pedestre.style.top = y * 60 + 30 + 'px';
     mundoEl.appendChild(pedestre);
     pedestres.push({el: pedestre, x, y});
   }
@@ -402,8 +436,8 @@
     carros.forEach(c => {
       c.x += (Math.random() - 0.5) * c.vel;
       c.y += (Math.random() - 0.5) * c.vel;
-      c.el.style.left = c.x * 80 + 40 + 'px';
-      c.el.style.top = c.y * 80 + 40 + 'px';
+      c.el.style.left = c.x * 60 + 30 + 'px';
+      c.el.style.top = c.y * 60 + 30 + 'px';
       
       if (c.x < 0 || c.x > TAM-1 || c.y < 0 || c.y > TAM-1) {
         c.el.remove();
@@ -412,12 +446,12 @@
     });
     
     pedestres.forEach(p => {
-      p.x += (Math.random() - 0.5) * 0.2;
-      p.y += (Math.random() - 0.5) * 0.2;
-      p.el.style.left = p.x * 80 + 40 + 'px';
-      p.el.style.top = p.y * 80 + 40 + 'px';
+      p.x += (Math.random() - 0.5) * 0.25;
+      p.y += (Math.random() - 0.5) * 0.25;
+      p.el.style.left = p.x * 60 + 30 + 'px';
+      p.el.style.top = p.y * 60 + 30 + 'px';
     });
-  }, 60);
+  }, 50);
 
   // RENDA
   setInterval(() => {
@@ -432,7 +466,7 @@
     }
     spawnCarro();
     spawnPedestre();
-  }, 4000);
+  }, 3500);
 
   function atualizarHUD() {
     document.getElementById('dinheiro').innerText = `$ ${dinheiro.toLocaleString()}`;
